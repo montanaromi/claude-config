@@ -88,6 +88,8 @@ allowed-tools: [Read, Glob, Grep]
 
 ### Standard DRL Pathway (Codebase Ingestion, Refactor, New Feature, New Product, New Frontend Feature)
 
+**Code Translation/Rewrite Detection:** If the request involves translating code from one language or paradigm to another (e.g., C→Rust, Python→Go, class-based→functional, monolith→microservices), apply the **Translation Quality Gates** from the reference section below during DRL construction and Phase 4 prompt generation. These gates are mandatory additions to the standard 5 sections — not optional enhancements.
+
 #### 5 Mandatory Sections
 
 **1. CORE OBJECTIVES** — Primary goals, measurable outcomes, success criteria.
@@ -179,6 +181,7 @@ Output validation summary with inferences applied and assumptions confirmed.
 - No conditional instructions
 - Zero code snippets or file structure diagrams
 - Maximum brevity achieved
+- For code translation/rewrite: all 8 Translation Quality Gates incorporated into Validation Framework
 
 ---
 
@@ -203,3 +206,40 @@ Output validation summary with inferences applied and assumptions confirmed.
 **Invalid DRL:** Report missing sections, contradictions, undefined references. Request resubmission.
 
 **Scope Creep:** Flag expansion beyond original intent. Recommend separate request or proceed with original scope only.
+
+---
+
+## Reference: Code Translation & Rewrite Quality Gates
+
+**Applies to:** Refactor, Codebase Ingestion, or any request that translates code between languages, paradigms, or architectures. All 8 gates MUST appear in the generated prompt's Validation Framework section.
+
+**Gate 1 — End-to-End Boundary Verification**
+The deliverable is NOT complete until the output artifact processes at least one real-world input and produces verifiably correct output. For daemons: must respond to a live request. For libraries: existing caller code must link and run. For compilers/transformers: must process a real input file. Unit tests that mock I/O do not satisfy this gate. State the concrete verification artifact in the prompt.
+
+**Gate 2 — Zero-Warning Build Enforcement**
+The build MUST be warning-clean before delivery. Enforce via language-appropriate flag (`RUSTFLAGS="-D warnings"`, `-Werror`, `--strict`, etc.) in CI. No warning suppressions permitted. Apply regardless of language, paradigm, or framework.
+
+**Gate 3 — Performance Baseline Comparison**
+A benchmark comparing the output to the original implementation MUST be included as a deliverable. Directional accuracy is sufficient for a first pass. The comparison must be measured and reported — assumed parity is not acceptable. Specify the benchmark tool and the key metric(s) to compare.
+
+**Gate 4 — Named Real-World Validation Artifacts**
+Specify 1–2 concrete upstream artifacts the output must process successfully (e.g., compile a real source file, serve a real protocol request, decompress a real corpus). "High test coverage" is not a substitute. Concrete artifacts expose integration failures that unit tests cannot.
+
+**Gate 5 — API/Interface Contract Verification**
+For any drop-in replacement claim (same ABI, same CLI flags, same wire protocol, same API surface): the contract MUST be verified at the boundary. Enumerate the interface elements to verify. Self-certification is not acceptable — a real caller or client must exercise the contract.
+
+**Gate 6 — Unsafe/Low-Level Code Audit**
+The count of dangerous patterns (unsafe blocks, raw pointers, unvalidated external input, shell interpolation, SQL string concatenation, eval) MUST be documented in the deliverable. Any count above 50 requires a formal review and per-site justification. Interface boundaries (FFI, IPC, subprocess, external commands) are highest risk — each requires a corresponding test.
+
+**Gate 7 — Prompt Tier / Scope Matching**
+The prompt complexity MUST match the project complexity. Use this mapping:
+- Complex multi-subsystem daemon, compiler, or service with large CLI surface → Extended specification required
+- Well-scoped library with bounded API surface → Medium specification acceptable; use Extended if performance or FFI completeness matters
+- Simple utility or filter program → Medium specification acceptable
+- Prototype or feasibility exploration → Minimal only; NOT suitable for production rewrites; add explicit production readiness caveat and plan promotion to Medium/Extended before deployment
+Mismatching produces either wasted specification (over) or P0 integration gaps (under).
+
+**Calibration note (from A/B empirical data):** Within the same tier, project complexity dominates outcome. A Medium-tier library rewrite (zlib: 68% production readiness) and a Medium-tier daemon rewrite (dnsmasq-mio: 62%) diverge by 15 points — same prompt tier, same template, different project scope. When a project sits at a tier boundary, choose Extended over Medium rather than under-specifying: the cost of an extra specification section is lower than the cost of a P0 wiring gap.
+
+**Gate 8 — Integration Sign-Off Checklist Decoupled from Unit Test Pass Rate**
+The prompt MUST include an explicit integration sign-off checklist that is separate from unit test pass rate. Feature completion is not integration verification. The checklist must include: live smoke test result, API contract verification result, performance baseline result, unsafe audit result. All four must be checked before the deliverable is accepted.
