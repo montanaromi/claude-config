@@ -19,7 +19,10 @@ mkdir -p "$SKILLS_DIR"
 
 # --- Symlink each skill ---
 
-SKILLS=("onboard" "readme" "commit" "blitzy-pr" "test" "aap" "dev-doc" "z" "tech-spec" "chuck" "logger" "use-case" "kurt" "aditya" "next" "retrigger" "skill-writer" "techdocs-organize" "trace" "archie-bootstrap")
+SKILLS=()
+while IFS= read -r skill; do
+    SKILLS+=("$skill")
+done < <(find "$SCRIPT_DIR/skills" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort)
 LINKED=()
 
 for skill in "${SKILLS[@]}"; do
