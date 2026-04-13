@@ -1,7 +1,7 @@
 ---
 name: z
 description: Generate structured Blitzy prompts through category-adaptive requirements gathering
-allowed-tools: [Read, Glob, Grep]
+allowed-tools: [Read]
 ---
 
 # Blitzy Prompt Processing Agent - Z Instructions
@@ -15,6 +15,16 @@ allowed-tools: [Read, Glob, Grep]
 ## Arguments
 
 `$ARGUMENTS` contains the user's initial request describing what they want to build, fix, or generate.
+
+| Arg | Effect |
+|-----|--------|
+| `<request text>` | Description of what to build, fix, or generate |
+| (empty) | Ask: "Describe what you want to build, fix, or generate." Do not proceed until a request is provided. |
+
+**Examples:**
+- `/z build a REST API for user management` → Standard pathway (New Feature or New Product)
+- `/z fix the login timeout bug in auth service` → Directive pathway (Bug Fix)
+- `/z add unit tests for the payment module` → Directive pathway (Add Testing)
 
 ---
 
@@ -43,6 +53,15 @@ allowed-tools: [Read, Glob, Grep]
 - **0.60–0.75:** Present top 2 categories for user selection
 - **<0.60:** Request explicit selection
 
+**Multi-Category Requests:** If a request maps to 2+ categories with confidence >0.60 each, execute the higher-priority pathway first (directive pathway takes precedence over standard). Upon completion, prompt: "This request also includes [Category B]. Proceed with separate [Category B] workflow? YES/NO." MUST NOT conflate two pathways into a single output.
+
+**Phase 1 Output:** Before proceeding, print:
+```
+Category: [selected category]
+Confidence: [0.00–1.00]
+Pathway: Standard | Directive
+```
+
 ---
 
 ## Phase 2: Requirements Gathering
@@ -53,9 +72,9 @@ allowed-tools: [Read, Glob, Grep]
 
 **Scope Rules:**
 - Changes MUST remain within stated problem/request boundaries
-- No architectural expansion beyond request scope
-- No unrelated refactoring or feature additions
-- Preserve all code not directly related to modifications
+- MUST NOT expand architecture beyond request scope
+- MUST NOT include unrelated refactoring or feature additions
+- MUST preserve all code not directly related to modifications
 
 **Overarching Objective:** Every directive set MUST open with a single-sentence objective statement defining the end-state outcome. Format: `OBJECTIVE: [Measurable outcome that defines done]`. Placed before all CRITICAL Directive blocks.
 
@@ -63,7 +82,7 @@ allowed-tools: [Read, Glob, Grep]
 
 **Directive Format:** `CRITICAL Directive: [Imperative verb] + [core requirement]`
 
-- Imperative verbs only: Execute, Fix, Validate, Achieve, Install, Scan, Document, Cover
+- Imperative verbs preferred. Canonical set: Execute, Fix, Validate, Achieve, Install, Scan, Document, Cover, Run, Commit, Trace, Wire, Stub. Other imperative verbs are acceptable when the canonical set does not fit.
 - No subjective qualifiers
 - Quantifiable success criteria required
 - Pass/fail determination embedded
@@ -71,7 +90,7 @@ allowed-tools: [Read, Glob, Grep]
 
 **Atomicity Rule:** Each CRITICAL Directive MUST address exactly one logical change. Sub-items (e.g., 12a, 12b, 12c) are PROHIBITED — each becomes its own numbered directive. If a finding involves multiple files but one coherent fix, it is one directive. If a finding involves unrelated changes across different subsystems, split into separate directives. This ensures pass/fail is binary per directive and partial completion is unambiguous.
 
-**Volume Advisory:** A single directive set MUST NOT exceed 8 CRITICAL Directives without a preamble note: `"This set contains N discrete changes across M files. Execute sequentially and verify each before proceeding."` If the set exceeds 12 directives, partition into ordered batches of ≤8 directives each, labeled explicitly (Batch 1/N, 2/N, etc.). Each batch MUST be independently executable and verifiable. Deliver Batch 1 first; subsequent batches are delivered after user confirms Batch 1 completion.
+**Volume Advisory:** A single directive set MUST NOT exceed 9 CRITICAL Directives (including the mandatory Self-Verification Directive) without a preamble note: `"This set contains N discrete changes across M files. Execute sequentially and verify each before proceeding."` If the set exceeds 12 directives, partition into ordered batches of ≤9 directives each, labeled explicitly (Batch 1/N, 2/N, etc.). Each batch MUST be independently executable and verifiable. Deliver Batch 1 first; subsequent batches are delivered after user confirms Batch 1 completion.
 
 **Dependency Annotation:** When multiple directives modify the same file, annotate with: `[Shares file with Directive N]` or `[Depends on: Directive N]`. This prevents merge conflicts and signals execution ordering to the executor.
 
@@ -111,9 +130,9 @@ This preserves prompt space for substantive fixes while ensuring trivial items a
 
 ### Standard DRL Pathway (Codebase Ingestion, Refactor, New Feature, New Product, New Frontend Feature)
 
-**Universal Quality Gates:** Gates 1, 2, 8, 9, and 10 from the Reference section apply to ALL standard pathway categories — not just translation/rewrite. Every generated prompt MUST include integration wiring verification (Gate 9), test execution binding (Gate 10), and integration sign-off decoupled from unit tests (Gate 8) in its Validation Framework.
+**Universal Quality Gates:** Gates 1, 2, 8, 9, 10, 12, and 13 from the Reference section apply to ALL standard pathway categories — not just translation/rewrite. Every generated prompt MUST include integration wiring verification (Gate 9), test execution binding (Gate 10), integration sign-off decoupled from unit tests (Gate 8), config propagation tracing (Gate 12), and registration-invocation pairing (Gate 13) in its Validation Framework.
 
-**Code Translation/Rewrite Detection:** If the request involves translating code from one language or paradigm to another (e.g., C→Rust, Python→Go, class-based→functional, monolith→microservices), apply ALL **Translation Quality Gates** (Gates 1–11) from the reference section below during DRL construction and Phase 4 prompt generation. These gates are mandatory additions to the standard 5 sections — not optional enhancements.
+**Code Translation/Rewrite Detection:** If the request involves translating code from one language or paradigm to another (e.g., C→Rust, Python→Go, class-based→functional, monolith→microservices), apply ALL **Translation Quality Gates** (Gates 1–18) from the reference section below during DRL construction and Phase 4 prompt generation. These gates are mandatory additions to the standard 6 sections — not optional enhancements.
 
 #### 6 Mandatory Sections
 
@@ -168,6 +187,7 @@ When existing rules are found, reference them by path rather than duplicating co
 |--------|---------|
 | PROHIBITED | Code snippets, file structure diagrams, directory trees, verbose examples |
 | PERMITTED | API contracts, interface type definitions, data model schemas |
+| PERMITTED | Text-based architecture diagrams (runtime topology, dependency flow, state machines) |
 
 #### Validation Before Presenting DRL
 
@@ -243,8 +263,9 @@ Output validation summary with inferences applied and assumptions confirmed.
 - No conditional instructions
 - Zero code snippets or file structure diagrams
 - Maximum brevity achieved
-- Universal gates (1, 2, 8, 9, 10) incorporated into Validation Framework for ALL categories
-- For code translation/rewrite: all 11 Translation Quality Gates incorporated into Validation Framework
+- Universal gates (1, 2, 8, 9, 10, 12, 13) incorporated into Validation Framework for ALL categories
+- For code translation/rewrite: all 18 Translation Quality Gates incorporated into Validation Framework
+- For code translation/rewrite: enumerate each applicable gate (1–18) with a one-line summary of how it is addressed in the prompt. Gates determined inapplicable MUST be listed with rationale for exclusion. This is the self-compliance audit — it prevents silent gate omission.
 
 ---
 
@@ -264,54 +285,52 @@ Output validation summary with inferences applied and assumptions confirmed.
 
 ---
 
+## Edge Cases
+
+- **Empty arguments:** Ask "Describe what you want to build, fix, or generate." Do not proceed.
+- **Unclassifiable request (confidence < 0.60 for all categories):** Present all 10 categories with one-line descriptions. Ask the user to select. Do not guess.
+- **Request spans 3+ categories:** Execute the highest-priority category first (directive > standard). Queue remaining categories and prompt sequentially after each completes.
+- **DRL contains contradictory requirements:** Flag each contradiction with both conflicting statements. Ask the user to resolve before proceeding to Phase 3.
+- **User submits code instead of a description:** Infer intent from the code (bug fix if broken, refactor if working, new feature if partial). Present the inference and ask for confirmation.
+- **Request references files/modules that don't exist:** Note the missing references in the DRL gap analysis. Infer intent if possible; flag as Critical gap if not.
+- **User returns partial DRL (missing sections):** List missing sections with one-line descriptions of what each requires. Do not generate a prompt from an incomplete DRL.
+- **User abandons mid-workflow (no response after Phase 2 prompt):** Do not auto-proceed. On next interaction, summarize where the workflow paused and ask whether to resume or restart.
+- **Non-text input (PDF, image, binary file):** Stop: "Provide your request as plain text. PDF/image inputs are not supported."
+- **DRL exceeds prompt token budget:** Warn: "This DRL is unusually large. Consider splitting into multiple focused prompts by subdomain." Suggest logical split points based on DRL section boundaries.
+
 ## Error Recovery
 
-**Invalid DRL:** Report missing sections, contradictions, undefined references. Request resubmission.
+**Invalid DRL:** List each deficiency as a numbered item with: (1) the affected DRL section, (2) what is missing or contradictory, (3) a one-sentence fix suggestion. Example: "Section 2 (Target Architecture): no database specified. Add the database engine and version to the Tech Stack subsection." Do not request generic "resubmission" — name what to fix.
 
-**Scope Creep:** Flag expansion beyond original intent. Recommend separate request or proceed with original scope only.
+**Scope Creep:** Flag expansion beyond original intent with a side-by-side: "Original scope: [X]. Detected expansion: [Y]." Recommend separate `/z` request for the expanded scope or proceed with original scope only.
+
+## Composability
+
+- Validate generated prompts with `/chuck` before delivery to Blitzy.
+- After prompt generation, run `/commit` to stage the artifact.
+- Use `/skill-writer z` to iteratively improve this skill's quality gates.
+- When the DRL produces a spec-level artifact, review with `/tech-spec` before generating the prompt.
+- After Blitzy delivers code from a generated prompt, validate with `/blitzy-pr`.
+- **Prompt development cycle:** `/z` → `/chuck` → iterate on failures → deliver to Blitzy.
+- **Full project onboarding:** `/onboard` → `/z` (Codebase Ingestion) → `/chuck` → Blitzy run.
+- **Spec-to-code pipeline:** `/z` → `/tech-spec` → Blitzy run → `/blitzy-pr` → `/commit`.
+
+---
+
+## Calibration
+
+When a prompt generated by z produces a deliverable that undergoes post-delivery review, record: (1) which gates caught real issues, (2) which gates were false positives (over-specified, created unnecessary work), (3) which production bugs were missed by all gates. Append calibration notes to individual gate descriptions as data accumulates. Gate 7's calibration note (A/B empirical data on prompt tier vs project complexity) is the template for future calibration entries.
+
+**Gates 12–18 status:** Derived from a single migration (curl C→Rust, 2026-04). Calibration data from additional migrations (Python→Go, Java→Kotlin, monolith→microservices) SHOULD be appended as it becomes available. Until calibrated across 3+ migrations, treat Gates 12–18 thresholds as provisional.
 
 ---
 
 ## Reference: Quality Gates
 
-**Gates 1, 2, 8, 9, 10** are universal — they apply to ALL generated prompts regardless of category. The remaining gates (3–7, 11) apply specifically to code translation, rewrite, and re-platform requests. All applicable gates MUST appear in the generated prompt's Validation Framework section.
+Read `references/quality-gates.md` for the full 18-gate reference. Key summary:
 
-**Gate 1 — End-to-End Boundary Verification**
-The deliverable is NOT complete until the output artifact processes at least one real-world input and produces verifiably correct output. For daemons: must respond to a live request. For libraries: existing caller code must link and run. For compilers/transformers: must process a real input file. Unit tests that mock I/O do not satisfy this gate. State the concrete verification artifact in the prompt.
+- **Universal gates (all prompts):** 1, 2, 8, 9, 10, 12, 13
+- **Code translation/rewrite gates:** 3–7, 11
+- **Language migration gates:** 14–18
 
-**Gate 2 — Zero-Warning Build Enforcement**
-The build MUST be warning-clean before delivery. Enforce via language-appropriate flag (`RUSTFLAGS="-D warnings"`, `-Werror`, `--strict`, etc.) in CI. No warning suppressions permitted. Apply regardless of language, paradigm, or framework.
-
-**Gate 3 — Performance Baseline Comparison**
-A benchmark comparing the output to the original implementation MUST be included as a deliverable. Directional accuracy is sufficient for a first pass. The comparison must be measured and reported — assumed parity is not acceptable. Specify the benchmark tool and the key metric(s) to compare.
-
-**Gate 4 — Named Real-World Validation Artifacts**
-Specify 1–2 concrete upstream artifacts the output must process successfully (e.g., compile a real source file, serve a real protocol request, decompress a real corpus). "High test coverage" is not a substitute. Concrete artifacts expose integration failures that unit tests cannot.
-
-**Gate 5 — API/Interface Contract Verification**
-For any drop-in replacement claim (same ABI, same CLI flags, same wire protocol, same API surface): the contract MUST be verified at the boundary. Enumerate the interface elements to verify. Self-certification is not acceptable — a real caller or client must exercise the contract.
-
-**Gate 6 — Unsafe/Low-Level Code Audit**
-The count of dangerous patterns (unsafe blocks, raw pointers, unvalidated external input, shell interpolation, SQL string concatenation, eval) MUST be documented in the deliverable. Any count above 50 requires a formal review and per-site justification. Interface boundaries (FFI, IPC, subprocess, external commands) are highest risk — each requires a corresponding test.
-
-**Gate 7 — Prompt Tier / Scope Matching**
-The prompt complexity MUST match the project complexity. Use this mapping:
-- Complex multi-subsystem daemon, compiler, or service with large CLI surface → Extended specification required
-- Well-scoped library with bounded API surface → Medium specification acceptable; use Extended if performance or FFI completeness matters
-- Simple utility or filter program → Medium specification acceptable
-- Prototype or feasibility exploration → Minimal only; NOT suitable for production rewrites; add explicit production readiness caveat and plan promotion to Medium/Extended before deployment
-Mismatching produces either wasted specification (over) or P0 integration gaps (under).
-
-**Calibration note (from A/B empirical data):** Within the same tier, project complexity dominates outcome. A Medium-tier library rewrite (zlib: 68% production readiness) and a Medium-tier daemon rewrite (dnsmasq-mio: 62%) diverge by 15 points — same prompt tier, same template, different project scope. When a project sits at a tier boundary, choose Extended over Medium rather than under-specifying: the cost of an extra specification section is lower than the cost of a P0 wiring gap.
-
-**Gate 8 — Integration Sign-Off Checklist Decoupled from Unit Test Pass Rate**
-The prompt MUST include an explicit integration sign-off checklist that is separate from unit test pass rate. Feature completion is not integration verification. The checklist must include: live smoke test result, API contract verification result, performance baseline result, unsafe audit result. All four must be checked before the deliverable is accepted.
-
-**Gate 9 — Integration Wiring Verification**
-Every created component MUST be reachable from the application's entry point through the actual execution path. For each new component, the deliverable must verify: (1) a caller or registry entry exists that references it, (2) that caller is itself reachable from bootstrap/main/router, (3) the component is exercised by at least one integration or E2E test that traverses the real call chain. Components that compile and pass unit tests but are never invoked from the execution path do not count as delivered. This is the dominant failure mode in code generation — created, tested in isolation, never wired.
-
-**Gate 10 — Test Execution Binding**
-Test specifications MUST have a runnable execution path. At minimum: a CI job definition, orchestration script, or documented single-command invocation that deploys the system under test and runs the specs end-to-end. Specs without execution binding are documentation, not validation. If the test requires infrastructure (databases, message queues, external services), the execution path must include that infrastructure setup.
-
-**Gate 11 — Consistency Model Delta Coverage (Re-Platforms)**
-When a re-platform changes the consistency model (e.g., SQL transactions → eventual consistency, monolith → event choreography, synchronous → async), the deliverable MUST enumerate lost atomicity or ordering guarantees and either: (a) accept each with documented rationale, or (b) provide compensating mechanism tests (saga rollback, idempotency, dead-letter handling). Dependency substitutions (e.g., replacing one TLS library, database driver, or message broker with another) MUST enumerate known behavioral differences at the boundary.
+All applicable gates MUST appear in the generated prompt's Validation Framework section.
