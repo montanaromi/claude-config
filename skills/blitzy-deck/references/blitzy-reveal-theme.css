@@ -1,0 +1,662 @@
+/*
+ * Blitzy Brand Theme for reveal.js
+ * Derived from Blitzy design system:
+ *   - component-library/src/styles/global.css
+ *   - blitzy-os-ui/src/index.css
+ *   - marketing-website/tailwind.config.js
+ *   - marketing-website/src/app/globals.css
+ *
+ * Usage: Embed this entire file as an inline <style> block in reveal.js HTML.
+ * Do NOT use default reveal.js themes (black, white, league, etc.).
+ */
+
+/* ============================================================
+   1. BRAND TOKENS (hardcoded for standalone HTML)
+   ============================================================ */
+:root {
+  /* Primary */
+  --blitzy-purple: #5B39F3;
+  --blitzy-purple-dark: #2D1C77;
+  --blitzy-purple-light: #7A6DEC;
+  --blitzy-purple-deep: #4101DB;
+  --blitzy-navy: #1A105F;
+
+  /* Accent */
+  --blitzy-teal: #94FAD5;
+  --blitzy-teal-muted: #77C8AB;
+
+  /* Surfaces */
+  --blitzy-white: #FFFFFF;
+  --blitzy-gray-50: #F5F5F5;
+  --blitzy-brand-50: #F2F0FE;
+  --blitzy-brand-100: #D4CBFC;
+  --blitzy-light-gray: #F4EFF6;
+
+  /* Text */
+  --blitzy-text-primary: #000000;
+  --blitzy-text-secondary: #333333;
+  --blitzy-text-muted: #5F5B76;
+  --blitzy-text-tertiary: #999999;
+  --blitzy-text-invert: #FFFFFF;
+
+  /* Borders */
+  --blitzy-border-primary: #999999;
+  --blitzy-border-light: #D9D9D9;
+  --blitzy-border-subtle: #F5F5F5;
+
+  /* Semantic */
+  --blitzy-success: #005335;
+  --blitzy-success-bg: #C9FCEA;
+  --blitzy-error: #EC3636;
+  --blitzy-error-bg: #FFDFDF;
+  --blitzy-warning: #92600C;
+  --blitzy-warning-bg: #FFFBEB;
+
+  /* Gradients */
+  --blitzy-gradient-hero: linear-gradient(68deg, #7A6DEC 15.56%, #5B39F3 62.74%, #4101DB 84.44%);
+  --blitzy-gradient-feature: radial-gradient(760.85% 462.4% at -63.56% 37.38%, #1A105F 11.53%, #372ABA 32.55%, rgba(148, 250, 213, 0.8) 56.3%);
+
+  /* Typography */
+  --blitzy-font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --blitzy-font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --blitzy-font-mono: 'Fira Code', 'JetBrains Mono', 'Source Code Pro', ui-monospace, monospace;
+}
+
+/* ============================================================
+   2. REVEAL.JS BASE OVERRIDES
+   ============================================================ */
+.reveal {
+  font-family: var(--blitzy-font-sans);
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--blitzy-text-secondary);
+  background: var(--blitzy-white);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.reveal .slides {
+  text-align: left;
+}
+
+.reveal .slides section {
+  padding: 60px 80px;
+  box-sizing: border-box;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* ============================================================
+   3. TYPOGRAPHY
+   ============================================================ */
+.reveal h1, .reveal h2, .reveal h3, .reveal h4 {
+  font-family: var(--blitzy-font-display);
+  color: var(--blitzy-text-primary);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-bottom: 0.6em;
+  font-weight: 500;
+}
+
+.reveal h1 { font-size: 2.4em; }
+.reveal h2 { font-size: 1.8em; }
+.reveal h3 { font-size: 1.3em; }
+.reveal h4 { font-size: 1.0em; font-weight: 600; }
+
+.reveal p {
+  line-height: 1.6;
+  margin-bottom: 0.8em;
+  max-width: 52ch;
+}
+
+.reveal strong { font-weight: 600; }
+
+.reveal small, .reveal .subtitle {
+  font-size: 0.75em;
+  color: var(--blitzy-text-muted);
+  font-weight: 400;
+}
+
+.reveal code {
+  font-family: var(--blitzy-font-mono);
+  font-size: 0.85em;
+  background: var(--blitzy-brand-50);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  color: var(--blitzy-purple);
+}
+
+.reveal pre code {
+  background: #1E1E2E;
+  color: #CDD6F4;
+  padding: 1.2em;
+  border-radius: 8px;
+  font-size: 0.65em;
+  line-height: 1.5;
+  display: block;
+  overflow-x: auto;
+}
+
+/* ============================================================
+   4. LISTS
+   ============================================================ */
+.reveal ul, .reveal ol {
+  margin-left: 0;
+  padding-left: 1.2em;
+}
+
+.reveal li {
+  margin-bottom: 0.5em;
+  line-height: 1.5;
+}
+
+.reveal li::marker {
+  color: var(--blitzy-purple);
+}
+
+/* ============================================================
+   5. SLIDE TYPES
+   ============================================================ */
+
+/* --- Title Slide --- */
+.slide-title {
+  background: var(--blitzy-gradient-hero) !important;
+  text-align: center !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+.slide-title h1,
+.slide-title h2,
+.slide-title h3,
+.slide-title p,
+.slide-title .subtitle {
+  color: var(--blitzy-text-invert) !important;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
+}
+
+.slide-title .subtitle {
+  color: rgba(255, 255, 255, 0.8) !important;
+  text-shadow: none;
+}
+
+.slide-title .date {
+  font-size: 0.6em;
+  color: rgba(255, 255, 255, 0.65) !important;
+  margin-top: 1.5em;
+  font-weight: 400;
+}
+
+/* --- Section Divider --- */
+.slide-divider {
+  background: var(--blitzy-navy) !important;
+  text-align: left !important;
+  justify-content: center !important;
+}
+
+.slide-divider h2,
+.slide-divider h3 {
+  color: var(--blitzy-text-invert) !important;
+}
+
+.slide-divider .section-number {
+  font-family: var(--blitzy-font-display);
+  font-size: 5em;
+  font-weight: 700;
+  color: var(--blitzy-teal) !important;
+  line-height: 1;
+  margin-bottom: 0.1em;
+  opacity: 0.9;
+}
+
+.slide-divider .section-label {
+  font-size: 0.7em;
+  color: rgba(255, 255, 255, 0.5) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 0.5em;
+}
+
+/* --- Closing Slide --- */
+.slide-closing {
+  background: var(--blitzy-gradient-feature) !important;
+  text-align: center !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+.slide-closing h2,
+.slide-closing h3,
+.slide-closing p {
+  color: var(--blitzy-text-invert) !important;
+}
+
+.slide-closing .contact {
+  font-size: 0.65em;
+  color: rgba(255, 255, 255, 0.6) !important;
+  margin-top: 2em;
+}
+
+/* ============================================================
+   6. LAYOUT UTILITIES
+   ============================================================ */
+
+/* Split layout (content + visual) */
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+  width: 100%;
+}
+
+.split-60-40 {
+  grid-template-columns: 3fr 2fr;
+}
+
+.split-40-60 {
+  grid-template-columns: 2fr 3fr;
+}
+
+/* Metric / KPI cards */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  width: 100%;
+}
+
+.kpi-card {
+  background: var(--blitzy-white);
+  border: 1px solid var(--blitzy-border-light);
+  border-top: 4px solid var(--blitzy-purple);
+  border-radius: 8px;
+  padding: 28px 24px;
+  text-align: center;
+}
+
+.kpi-card .kpi-value {
+  font-family: var(--blitzy-font-display);
+  font-size: 2.4em;
+  font-weight: 700;
+  color: var(--blitzy-purple);
+  line-height: 1.1;
+  margin-bottom: 0.15em;
+}
+
+.kpi-card .kpi-label {
+  font-size: 0.7em;
+  color: var(--blitzy-text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.kpi-card .kpi-trend {
+  font-size: 0.65em;
+  margin-top: 0.5em;
+  font-weight: 500;
+}
+
+.kpi-trend.up { color: var(--blitzy-success); }
+.kpi-trend.down { color: var(--blitzy-error); }
+.kpi-trend.neutral { color: var(--blitzy-text-tertiary); }
+
+/* Before / After comparison */
+.comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.comparison .before {
+  background: var(--blitzy-brand-50);
+  padding: 32px;
+}
+
+.comparison .after {
+  background: var(--blitzy-white);
+  padding: 32px;
+  border: 1px solid var(--blitzy-border-light);
+  border-left: none;
+}
+
+.comparison .label {
+  font-size: 0.6em;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  color: var(--blitzy-text-muted);
+  margin-bottom: 1em;
+}
+
+/* Risk cards */
+.risk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
+.risk-card {
+  padding: 24px;
+  border-radius: 8px;
+  border-left: 5px solid;
+}
+
+.risk-card.critical {
+  background: var(--blitzy-error-bg);
+  border-color: var(--blitzy-error);
+}
+
+.risk-card.warning {
+  background: var(--blitzy-warning-bg);
+  border-color: #D97706;
+}
+
+.risk-card.ok {
+  background: var(--blitzy-success-bg);
+  border-color: var(--blitzy-success);
+}
+
+.risk-card .risk-label {
+  font-size: 0.6em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5em;
+}
+
+.risk-card.critical .risk-label { color: var(--blitzy-error); }
+.risk-card.warning .risk-label { color: var(--blitzy-warning); }
+.risk-card.ok .risk-label { color: var(--blitzy-success); }
+
+/* ============================================================
+   7. TABLES
+   ============================================================ */
+.reveal table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75em;
+}
+
+.reveal table th {
+  background: var(--blitzy-purple);
+  color: var(--blitzy-text-invert);
+  font-weight: 600;
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 0.9em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.reveal table th:first-child { border-radius: 6px 0 0 0; }
+.reveal table th:last-child { border-radius: 0 6px 0 0; }
+
+.reveal table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--blitzy-border-light);
+}
+
+.reveal table tr:nth-child(even) td {
+  background: var(--blitzy-brand-50);
+}
+
+.reveal table tr:last-child td:first-child { border-radius: 0 0 0 6px; }
+.reveal table tr:last-child td:last-child { border-radius: 0 0 6px 0; }
+
+/* ============================================================
+   8. CALLOUTS & BLOCKQUOTES
+   ============================================================ */
+.reveal blockquote, .callout {
+  background: var(--blitzy-brand-50);
+  border-left: 4px solid var(--blitzy-purple);
+  border-radius: 0 8px 8px 0;
+  padding: 20px 24px;
+  margin: 1em 0;
+  font-style: normal;
+  color: var(--blitzy-text-secondary);
+  font-size: 0.9em;
+  box-shadow: none;
+}
+
+.callout-success {
+  background: var(--blitzy-success-bg) !important;
+  border-left-color: var(--blitzy-success) !important;
+}
+
+.callout-warning {
+  background: var(--blitzy-warning-bg) !important;
+  border-left-color: #D97706 !important;
+}
+
+.callout-error {
+  background: var(--blitzy-error-bg) !important;
+  border-left-color: var(--blitzy-error) !important;
+}
+
+/* ============================================================
+   9. PILLS & BADGES
+   ============================================================ */
+.pill {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 32px;
+  font-size: 0.6em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pill-purple {
+  background: var(--blitzy-brand-50);
+  color: var(--blitzy-purple);
+}
+
+.pill-success {
+  background: var(--blitzy-success-bg);
+  color: var(--blitzy-success);
+}
+
+.pill-warning {
+  background: var(--blitzy-warning-bg);
+  color: var(--blitzy-warning);
+}
+
+.pill-error {
+  background: var(--blitzy-error-bg);
+  color: var(--blitzy-error);
+}
+
+/* ============================================================
+   10. MERMAID DIAGRAM OVERRIDES
+   ============================================================ */
+.mermaid {
+  font-family: var(--blitzy-font-sans) !important;
+}
+
+.mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Override Mermaid default node colors via CSS as a fallback
+   (primary override is via mermaid.initialize themeVariables) */
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node ellipse,
+.mermaid .node polygon {
+  fill: var(--blitzy-brand-50) !important;
+  stroke: var(--blitzy-purple) !important;
+}
+
+.mermaid .node .label {
+  color: var(--blitzy-text-secondary) !important;
+}
+
+.mermaid .edgePath .path {
+  stroke: var(--blitzy-text-tertiary) !important;
+}
+
+.mermaid .edgeLabel {
+  background: var(--blitzy-white) !important;
+  color: var(--blitzy-text-muted) !important;
+  font-size: 0.8em;
+}
+
+.mermaid .cluster rect {
+  fill: var(--blitzy-light-gray) !important;
+  stroke: var(--blitzy-border-light) !important;
+}
+
+/* Gantt chart overrides */
+.mermaid .section0 { fill: var(--blitzy-brand-50) !important; }
+.mermaid .section1 { fill: var(--blitzy-light-gray) !important; }
+.mermaid .task { fill: var(--blitzy-purple) !important; stroke: var(--blitzy-purple-dark) !important; }
+.mermaid .taskText { fill: var(--blitzy-text-invert) !important; }
+.mermaid .done0, .mermaid .done1 { fill: var(--blitzy-brand-100) !important; stroke: var(--blitzy-purple) !important; }
+.mermaid .active0, .mermaid .active1 { fill: var(--blitzy-teal) !important; stroke: var(--blitzy-success) !important; }
+
+/* ============================================================
+   11. ICON UTILITIES (Lucide)
+   ============================================================ */
+.icon {
+  display: inline-block;
+  vertical-align: middle;
+  width: 1em;
+  height: 1em;
+}
+
+.icon-sm { width: 0.75em; height: 0.75em; }
+.icon-lg { width: 1.5em; height: 1.5em; }
+.icon-xl { width: 2em; height: 2em; }
+.icon-2xl { width: 3em; height: 3em; }
+
+.icon-block {
+  display: block;
+  margin: 0 auto 0.5em;
+}
+
+.icon-purple { color: var(--blitzy-purple); }
+.icon-teal { color: var(--blitzy-teal-muted); }
+.icon-muted { color: var(--blitzy-text-tertiary); }
+.icon-success { color: var(--blitzy-success); }
+.icon-error { color: var(--blitzy-error); }
+.icon-warning { color: var(--blitzy-warning); }
+
+/* ============================================================
+   12. PROGRESS / TIMELINE UTILITIES
+   ============================================================ */
+.timeline {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  width: 100%;
+  margin: 1em 0;
+}
+
+.timeline-step {
+  flex: 1;
+  text-align: center;
+  position: relative;
+}
+
+.timeline-step::after {
+  content: '';
+  position: absolute;
+  top: 16px;
+  right: -50%;
+  width: 100%;
+  height: 3px;
+  background: var(--blitzy-border-light);
+  z-index: 0;
+}
+
+.timeline-step:last-child::after { display: none; }
+
+.timeline-step.active::after { background: var(--blitzy-purple); }
+
+.timeline-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--blitzy-border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 8px;
+  position: relative;
+  z-index: 1;
+  font-size: 0.55em;
+  font-weight: 700;
+  color: var(--blitzy-text-tertiary);
+}
+
+.timeline-step.active .timeline-dot {
+  background: var(--blitzy-purple);
+  color: var(--blitzy-text-invert);
+}
+
+.timeline-step.complete .timeline-dot {
+  background: var(--blitzy-success);
+  color: var(--blitzy-text-invert);
+}
+
+.timeline-step .timeline-label {
+  font-size: 0.6em;
+  color: var(--blitzy-text-muted);
+  line-height: 1.3;
+}
+
+/* ============================================================
+   13. FOOTER & PAGE NUMBER
+   ============================================================ */
+.slide-footer {
+  position: absolute;
+  bottom: 20px;
+  left: 80px;
+  right: 80px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.45em;
+  color: var(--blitzy-text-tertiary);
+}
+
+.slide-footer .logo-text {
+  font-family: var(--blitzy-font-display);
+  font-weight: 600;
+  color: var(--blitzy-purple);
+  letter-spacing: -0.02em;
+}
+
+/* ============================================================
+   14. SPEAKER NOTES
+   ============================================================ */
+.reveal aside.notes {
+  font-family: var(--blitzy-font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   15. PRINT / PDF OVERRIDES
+   ============================================================ */
+@media print {
+  .reveal .slides section {
+    page-break-inside: avoid;
+  }
+
+  .slide-title,
+  .slide-divider,
+  .slide-closing {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
