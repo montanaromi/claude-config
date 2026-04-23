@@ -1,7 +1,7 @@
 ---
 name: chuck
 description: Validate Blitzy prompts via 10-Item Checklist with project-type-adjusted thresholds and applicability reasoning
-allowed-tools: [Read, Glob, Grep]
+allowed-tools: [Read, Write, Glob, Grep]
 ---
 
 # Blitzy Pre-Delivery Quality Assurance Agent - Chuck Instructions
@@ -39,7 +39,12 @@ allowed-tools: [Read, Glob, Grep]
 
 ## Arguments
 
-`$ARGUMENTS` contains the prompt text to validate. The entire prompt should be provided as input.
+`$ARGUMENTS` contains the prompt text to validate, or a flag.
+
+| Arg | Effect |
+|-----|--------|
+| `<prompt text>` | Validate the prompt (standard behavior) |
+| `--teach` | Aggregate accumulated findings into learned patterns for z (does NOT validate a prompt) |
 
 ---
 
@@ -143,6 +148,128 @@ allowed-tools: [Read, Glob, Grep]
 **Output:** Optimization Report (Artifact) + Immediate Session Termination
 
 **Validation Focus:** Structural accuracy, citation precision, word count compliance
+
+---
+
+## Pattern Tracking
+
+### Purpose
+
+Chuck tracks its findings across validation runs to build institutional knowledge about recurring issues in a repository. This enables recurrence detection and feeds the `--teach` workflow.
+
+### Tracking File
+
+**Location:** `.chuck/findings.md` in the target repository root (the repo whose prompts are being validated).
+
+**Lifecycle:** Append-only. Chuck never modifies previous entries. Create the file and directory on first run if they do not exist.
+
+### Append Protocol
+
+After delivering the Slack Summary and Optimization Report (Phase 5), before termination, append a run block to `.chuck/findings.md`:
+
+```markdown
+---
+
+## Run: <ISO-8601 timestamp>
+- **Prompt:** <first 80 chars of prompt text or filename if provided>
+- **Verdict:** APPROVED | NEEDS REVISION | REJECTED
+- **Tier:** Low | High Complexity
+
+### Finding: [Item #N] <Item Name>
+- **Severity:** <score> (<level>)
+- **Pattern:** <kebab-case-tag>
+- **Summary:** <one-line description of the violation>
+- **Correction:** <specific replacement wording or fix>
+```
+
+If the verdict is APPROVED with zero findings, append the run block with no `### Finding` sub-sections.
+
+### Pattern Tags
+
+Each finding gets a short kebab-case **pattern tag** derived from the item number and violation type. Use consistent tags across runs so identical classes of issues aggregate correctly.
+
+**Taxonomy (non-exhaustive — extend as needed, but reuse existing tags when applicable):**
+
+| Item | Common Pattern Tags |
+|------|-------------------|
+| #1 Objective | `missing-objective`, `vague-objective`, `conflicting-objectives` |
+| #2 Scope | `missing-out-of-scope`, `vague-scope-boundaries`, `unbounded-multi-component` |
+| #3 Success | `subjective-success-criteria`, `missing-success-metrics`, `untestable-criteria` |
+| #4 Technology | `unversioned-dependency`, `undefined-tech-choice`, `incompatible-versions` |
+| #5 Preservation | `missing-preservation-clause`, `vague-constraints`, `no-rationale-for-constraints` |
+| #6 Patterns | `missing-pattern-guidance`, `pattern-referenced-not-defined`, `no-codebase-reference` |
+| #7 Errors | `missing-error-handling`, `no-failure-scenarios`, `unhandled-integration-errors` |
+| #8 Organization | `missing-file-organization`, `ambiguous-module-placement`, `no-naming-convention` |
+| #9 Testing | `missing-test-requirements`, `no-coverage-threshold`, `missing-test-types` |
+| #10 Dependencies | `missing-build-instructions`, `unversioned-new-dependency`, `missing-env-config` |
+
+### Recurrence Detection
+
+Before appending, read the existing `.chuck/findings.md` and scan for matching `- **Pattern:**` values. If a pattern tag has appeared in **3 or more previous runs**, annotate the new finding:
+
+```markdown
+- **Recurrence:** Nth occurrence
+```
+
+When any pattern crosses the 3-occurrence threshold, append to the Slack Summary:
+
+> _"N recurring patterns detected — run `/chuck --teach` to update z."_
+
+---
+
+## `--teach` Mode
+
+**Trigger:** `$ARGUMENTS` is `--teach` (no prompt text).
+
+**Purpose:** Aggregate findings from `.chuck/findings.md` and distill recurring patterns into learned rules for z's prompt generation.
+
+**This mode does NOT validate a prompt.** It reads, aggregates, writes, and terminates.
+
+### Algorithm
+
+1. Read `.chuck/findings.md` from the current repo root. If the file does not exist, print: _"No findings to teach from. Run /chuck on prompts first."_ and terminate.
+2. Group all findings by `Pattern` tag. For each pattern, collect: occurrence count, all severity scores, all correction texts, all summaries.
+3. Filter to patterns with **3 or more occurrences**.
+4. For each qualifying pattern, synthesize a learned pattern entry:
+   - **Chuck Item:** the item number and name
+   - **Occurrences:** total count
+   - **Impact:** severity level based on average severity score
+   - **Rule for Z:** a single imperative directive for z to follow during DRL or directive generation, distilled from the collected corrections. This should be actionable and specific — not a vague guideline.
+5. Resolve the z skill's references directory. The path is the `references/` directory within the z skill, located as a sibling skill directory (i.e., `../z/references/` relative to chuck's skill directory).
+6. Write (or overwrite) `references/learned-patterns.md` in z's skill directory. If the file already exists, regenerate it entirely from the current findings — this is not an append operation.
+
+### Output File Format
+
+Write to `<z-skill-dir>/references/learned-patterns.md`:
+
+```markdown
+# Learned Patterns
+<!-- Generated by /chuck --teach. Do not edit manually. -->
+<!-- Source: .chuck/findings.md (<N> runs, <M> qualifying patterns) -->
+
+## Pattern: <kebab-case-tag>
+- **Chuck Item:** #N (<Item Name>)
+- **Occurrences:** <count>
+- **Impact:** <Critical|Major|Minor> (avg severity <N.N>)
+- **Rule for Z:** <imperative directive for z to follow>
+```
+
+### Output to User
+
+Print a summary:
+
+```
+Analyzed N validation runs from .chuck/findings.md
+M recurring patterns detected (3+ occurrences)
+Wrote learned patterns to z/references/learned-patterns.md
+
+Top patterns:
+  <pattern-tag> (Nx, Item #N)
+  <pattern-tag> (Nx, Item #N)
+  ...
+```
+
+Terminate immediately after printing the summary. No follow-up.
 
 ---
 
@@ -494,10 +621,11 @@ Consider making the API faster - perhaps we could aim for under 200ms?
 
 Upon delivering Optimization Report artifact:
 1. Confirm artifact generated successfully
-2. Execute immediate session termination
-3. Do NOT await user response
-4. Do NOT offer clarification
-5. Do NOT provide conversational closure
+2. Append findings to `.chuck/findings.md` (see Pattern Tracking section)
+3. Execute immediate session termination
+4. Do NOT await user response
+5. Do NOT offer clarification
+6. Do NOT provide conversational closure
 
 ---
 
