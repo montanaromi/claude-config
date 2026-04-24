@@ -1,12 +1,16 @@
 ---
 name: trace
-description: Parse and analyze LangSmith trace JSON files to surface agent reasoning — decisions, task breakdowns, strategy shifts, and problem-solving narrative
+description: Parse and analyze trace files (JSON or plain text from ~/.traces/) to surface agent reasoning — decisions, task breakdowns, strategy shifts, and problem-solving narrative
 allowed-tools: [Read, Glob, Grep, "Bash(python3:*)"]
 ---
 
 # Trace — Agent Reasoning Analyzer
 
-You are analyzing a LangSmith trace JSON file exported from Blitzy's agentic coding pipeline. A reasoning-focused extraction has been injected below, surfacing the agent's actual words, decisions, and problem-solving narrative — not infrastructure metrics.
+You are analyzing a trace file from Blitzy's agentic coding pipeline. The parser auto-detects the format:
+- **Plain text** (`~/.traces/*.txt`): `====`/`----` delimited runs with `[ROLE]` markers
+- **LangSmith JSON**: exported via archie-tracing.py
+
+A reasoning-focused extraction has been injected below, surfacing the agent's actual words, decisions, and problem-solving narrative — not infrastructure metrics.
 
 ## Arguments
 
@@ -14,9 +18,12 @@ You are analyzing a LangSmith trace JSON file exported from Blitzy's agentic cod
 
 | Flag | Effect |
 |------|--------|
-| `<file-path>` | Path to the trace JSON file (positional, required) |
+| `<file-path>` | Path to the trace file — JSON or plain text (positional) |
+| `--latest` | Use the most recently modified trace from `~/.traces/` (default when no path given) |
 | `--verbose` | Show full untruncated text for all messages |
 | `--focus AREA` | Focus output on a specific area (see Focus Mode below) |
+
+If no `<file-path>` is provided and `--latest` is not explicitly set, the parser defaults to `--latest`.
 
 ## Injected Data
 
@@ -27,8 +34,10 @@ You are analyzing a LangSmith trace JSON file exported from Blitzy's agentic cod
 ## Error Handling
 
 - **If the file is not found**: The parser will report the error. Confirm the path with the user.
-- **If the JSON is malformed**: The parser will report a parse error with details.
+- **If JSON is malformed**: The parser will report a parse error with details.
+- **If text format is unrecognized**: The parser falls back to JSON parsing. If that also fails, it reports both errors.
 - **If the trace has no runs**: The parser will report an empty trace. This may indicate a failed export.
+- **If `~/.traces/` is empty or missing**: The parser reports no traces found. Ask the user for a file path.
 
 ## Your Task
 
@@ -107,3 +116,11 @@ When a focus mode is active, still produce all 5 analysis sections, but weight h
 - Keep findings specific to this trace, not generic advice
 - Be direct about reasoning quality — call out both strong and weak moments
 - Use severity indicators for problems: **[STRONG]**, **[WEAK]**, **[NOTABLE]**
+
+## After Analysis
+
+Based on the verdict, suggest relevant next actions:
+- If reasoning quality was poor → "Consider reviewing the agent prompt or system instructions."
+- If the agent got stuck on errors → "Run `/skill-writer` on the skill that produced this trace to improve error handling."
+- If task decomposition was weak → "Consider adding explicit task-planning instructions to the agent's system prompt."
+- To share findings → "Run `/commit` to save any changes prompted by this analysis."
